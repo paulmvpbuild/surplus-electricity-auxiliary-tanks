@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NEM Live Hot Water Simulation</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar" aria-label="Simulation overview">
+        <div>
+          <p class="eyebrow">AEMO dashboard-inspired control simulation</p>
+          <h1>Surplus-Electricity Auxiliary Tanks</h1>
+        </div>
+      </section>
+
+      <section class="dashboard-grid">
+        <section class="chart-panel" aria-label="NEM live price chart">
+          <div class="panel-heading">
+            <div>
+              <h2>NEM live data</h2>
+              <p>24-hour dispatch price view with current-time and simulation markers.</p>
+            </div>
+            <div class="chart-price">
+              <span>Price</span>
+              <strong id="chartPriceReadout">$0/MWh</strong>
+            </div>
+            <button id="simulateButton" class="primary-button" type="button">
+              <span class="play-icon" aria-hidden="true"></span>
+              Simulate
+            </button>
+          </div>
+
+          <div class="chart-wrap">
+            <svg id="priceChart" class="price-chart" viewBox="0 0 1000 430" role="img" aria-labelledby="chartTitle chartDesc">
+              <title id="chartTitle">NEM live data price chart</title>
+              <desc id="chartDesc">A 24-hour electricity price chart with a draggable price set point and time markers.</desc>
+            </svg>
+          </div>
+
+          <div class="controls-row">
+            <label class="slider-control">
+              <span>Price set point</span>
+              <input id="priceSetPoint" type="range" min="-100" max="450" step="5" value="90">
+              <strong id="priceSetPointValue">$90/MWh</strong>
+            </label>
+            <label class="slider-control">
+              <span>Auxiliary thermostat</span>
+              <input id="thermostat" type="range" min="30" max="60" step="1" value="55">
+              <strong id="thermostatValue">55°C</strong>
+            </label>
+          </div>
+
+          <div class="status-row">
+            <div id="periodStatus" class="status-pill status-peak">peak-usage period in effect</div>
+            <div id="heatingStatus" class="status-pill status-idle">standby</div>
+            <button id="personaliseButton" class="personalise-button" type="button">Personalise according to my historical usage data</button>
+          </div>
+        </section>
+
+        <section class="plant-panel" aria-label="Energy grid and hot water tanks">
+          <div class="grid-scene">
+            <div class="grid-node" aria-label="Energy grid">
+              <div class="simple-grid">
+                <span></span>
+              </div>
+              <strong>Energy grid</strong>
+            </div>
+
+            <div id="electricPipe" class="electric-pipe" aria-label="Electricity flow pipeline">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+
+            <div class="tank-block">
+              <div id="auxTank" class="tank">
+                <div id="tankHeat" class="tank-heat"></div>
+                <div id="thermostatMarker" class="thermostat-marker" role="slider" aria-label="Auxiliary tank thermostat set point" aria-valuemin="30" aria-valuemax="60" aria-valuenow="55" tabindex="0">
+                  <span></span>
+                </div>
+                <div class="tank-shine"></div>
+                <span id="tempReadout" class="tank-temp">30°C</span>
+              </div>
+              <strong>Auxiliary pre-fill pre-heated tank</strong>
+            </div>
+
+            <div class="tank-block regular">
+              <div class="tank regular-tank">
+                <div id="regularWater" class="regular-water"></div>
+                <div class="tank-shine"></div>
+              </div>
+              <strong>Regular hot water tank</strong>
+            </div>
+
+            <button id="showerButton" class="shower-button" type="button" aria-label="Toggle shower water flow">
+              <span class="shower-neck"></span>
+              <span class="shower-head">
+                <i></i>
+                <i></i>
+                <i></i>
+              </span>
+              <span id="showerDrops" class="shower-drops" aria-hidden="true">
+                <i></i>
+                <i></i>
+                <i></i>
+              </span>
+            </button>
+          </div>
+
+          <div class="metrics-strip">
+            <div>
+              <span>Auxiliary tank</span>
+              <strong id="tankState">30°C warming target</strong>
+            </div>
+            <div>
+              <span>Heating rule</span>
+              <strong>price below set point</strong>
+            </div>
+            <div>
+              <span>Runtime</span>
+              <strong>24 hours in 24 seconds</strong>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
