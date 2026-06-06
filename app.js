@@ -191,14 +191,16 @@ function updateState(deltaHours = 0) {
   const target = Number(thermostat.value);
   const price = getPriceAtHour(simulatedHour);
   const cheapPeriod = price <= setPoint;
-  const canRaiseTemperature = cheapPeriod && tankTemp < target;
 
   if (deltaHours > 0) {
-    if (canRaiseTemperature) {
-      tankTemp += 5 * deltaHours;
+    if (cheapPeriod) {
+      if (tankTemp < target) {
+        tankTemp += 5 * deltaHours;
+      }
       auxReserveLevel = Math.min(100, auxReserveLevel + 10 * deltaHours);
     } else {
       tankTemp -= coolingRatePerHour * deltaHours;
+      auxReserveLevel = Math.max(8, auxReserveLevel - 8 * deltaHours);
     }
   }
 
@@ -447,8 +449,9 @@ function runBackgroundHeating(now) {
   const cheapPeriod = getPriceAtHour(simulatedHour) <= Number(priceSetPoint.value);
   const target = Number(thermostat.value);
   const canFillWhileIdle = !isRunning && cheapPeriod && (tankTemp < target || auxReserveLevel < 100);
+  const canDrainWhileIdle = !isRunning && !cheapPeriod && (tankTemp > ambientTemp || auxReserveLevel > 8);
 
-  if (canFillWhileIdle) {
+  if (canFillWhileIdle || canDrainWhileIdle) {
     updateState(deltaHours);
   } else if (!isRunning) {
     updateState(0);
