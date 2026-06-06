@@ -44,6 +44,8 @@ let showerLastFrame = null;
 let simulatedHour = getCurrentHourDecimal();
 let animationFrameId = null;
 let lastFrameTime = null;
+let backgroundHeatingLastFrame = null;
+let personaliseAnimationId = null;
 let isRunning = false;
 let activeDrag = null;
 
@@ -403,6 +405,58 @@ function resetSimulation() {
   renderChart();
 }
 
+function animatePriceSetPointTo(targetPrice) {
+  if (personaliseAnimationId) {
+    cancelAnimationFrame(personaliseAnimationId);
+  }
+
+  const startPrice = Number(priceSetPoint.value);
+  const startedAt = performance.now();
+  const duration = 1500;
+
+  const tick = (now) => {
+    const progress = clamp((now - startedAt) / duration, 0, 1);
+    const eased = 1 - (1 - progress) ** 3;
+    const nextPrice = Math.round((startPrice + (targetPrice - startPrice) * eased) / 5) * 5;
+
+    priceSetPoint.value = String(nextPrice);
+    updateState(0);
+    renderChart();
+
+    if (progress < 1) {
+      personaliseAnimationId = requestAnimationFrame(tick);
+    } else {
+      priceSetPoint.value = String(targetPrice);
+      updateState(0);
+      renderChart();
+      personaliseAnimationId = null;
+    }
+  };
+
+  personaliseAnimationId = requestAnimationFrame(tick);
+}
+
+function runBackgroundHeating(now) {
+  if (backgroundHeatingLastFrame === null) {
+    backgroundHeatingLastFrame = now;
+  }
+
+  const deltaHours = Math.min(0.08, (now - backgroundHeatingLastFrame) / 1000);
+  backgroundHeatingLastFrame = now;
+
+  const cheapPeriod = getPriceAtHour(simulatedHour) <= Number(priceSetPoint.value);
+  const target = Number(thermostat.value);
+  const canFillWhileIdle = !isRunning && cheapPeriod && (tankTemp < target || auxReserveLevel < 100);
+
+  if (canFillWhileIdle) {
+    updateState(deltaHours);
+  } else if (!isRunning) {
+    updateState(0);
+  }
+
+  requestAnimationFrame(runBackgroundHeating);
+}
+
 priceSetPoint.addEventListener("input", () => {
   updateState(0);
   renderChart();
@@ -411,14 +465,9 @@ priceSetPoint.addEventListener("input", () => {
 personaliseButton.addEventListener("click", () => {
   const priceMin = Number(priceSetPoint.min);
   const priceMax = Number(priceSetPoint.max);
-  const thermostatMin = Number(thermostat.min);
-  const thermostatMax = Number(thermostat.max);
+  const targetPrice = Math.round((priceMin + (priceMax - priceMin) * 0.5) / 5) * 5;
 
-  priceSetPoint.value = String(Math.round((priceMin + (priceMax - priceMin) * 0.8) / 5) * 5);
-  thermostat.value = String(Math.round(thermostatMin + (thermostatMax - thermostatMin) * 0.8));
-  tankTemp = Math.min(tankTemp, Number(thermostat.value));
-  updateState(0);
-  renderChart();
+  animatePriceSetPointTo(targetPrice);
 });
 
 thermostat.addEventListener("input", () => {
@@ -532,3 +581,4 @@ thermostatMarker.addEventListener("keydown", (event) => {
 
 updateState(0);
 renderChart();
+requestAnimationFrame(runBackgroundHeating);
